@@ -1,0 +1,44 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{miscellaneous}[2018/09/12 Zibou]
+
+\ProcessOptions\relax
+
+% Une commande pour ajouter des sections non numérotées.
+\newcommand{\unnumberedsection}[1]{
+  \phantomsection
+  \addcontentsline{toc}{section}{#1}
+  \section*{#1}
+}
+
+% Affichage de la bibliographie dans le sommaire
+\usepackage[nottoc]{tocbibind} %Permet d'afficher la bibliographie dans le ToC
+
+% Support de la couleur
+\usepackage[dvipsnames]{xcolor}
+\newcommand{\blue}[1]{{\color{NavyBlue}#1}}
+\newcommand{\orange}[1]{{\color{YellowOrange}#1}}
+
+% Commandes de référencement hypertexte.
+\newcommand{\fig}[1]{\hyperref[fig:#1]{\@textfigure \ref*{fig:#1}}}
+\newcommand{\Fig}[1]{\hyperref[fig:#1]{\@textFigure \ref*{fig:#1}}}
+
+\newcommand{\tab}[1]{\hyperref[tab:#1]{\@texttable \ref*{tab:#1}}}
+\newcommand{\Tab}[1]{\hyperref[tab:#1]{\@textTable \ref*{tab:#1}}}
+
+\newcommand{\sect}[1]{\hyperref[sec:#1]{section \ref*{sec:#1}}}
+\newcommand{\Sect}[1]{\hyperref[sec:#1]{Section \ref*{sec:#1}}}
+
+\newcommand{\append}[1]{\hyperref[app:#1]{\@textappendix \ref*{app:#1}}}
+\newcommand{\Append}[1]{\hyperref[app:#1]{\@textAppendix \ref*{app:#1}}}
+
+\newcommand{\eq}[1]{\hyperref[eq:#1]{\@texteq (\ref*{eq:#1})}}
+\newcommand{\Eq}[1]{\hyperref[eq:#1]{\@textEq (\ref*{eq:#1})}}
+
+% Pour énumérer avec des symboles customs
+\usepackage{enumitem}
+
+
+% Pour présenter du code
+% \usepackage{minted}
+
+\endinput

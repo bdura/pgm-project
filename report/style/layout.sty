@@ -1,0 +1,38 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{layout}[2018/09/12 Zibou]
+
+\ProcessOptions\relax
+
+% Gestion des interlignes (notamment pour le ToC)
+\usepackage{setspace}
+
+% Configuration des paragraphes : pas d'alinéa, saut de ligne
+\usepackage{parskip}
+
+% Pour modifier les en-têtes et pieds de page
+\usepackage{fancyhdr}
+
+% Figures avec du texte sur les côtés
+\usepackage{wrapfig}
+
+%
+\usepackage{multirow}
+
+% For USLetter
+\usepackage{geometry}
+
+% Contrôle des marges
+\usepackage{vmargin}
+\setmarginsrb{3 cm}{2.5 cm}{3 cm}{2.5 cm}{1 cm}{1 cm}{1 cm}{1 cm}
+
+% Mise en page des notes de bas de page...
+\usepackage[bottom, hang, flushmargin]{footmisc}
+
+% Gestion des graphiques
+\usepackage{graphicx}
+\usepackage{subcaption}
+
+% Mise en page des légendes
+\captionsetup{justification=centering, margin=.5cm}
+
+\endinput
