@@ -1,0 +1,14 @@
+.ipynb_checkpoints/
+.idea/
+_static/
+_templates/
+__pycache__/
+_minted-report/
+latex-output/
+*.synctex.gz
+.DS_Store
+notebooks/results/
+
+/data/processed/
+/data/raw/
+docs/_build/
