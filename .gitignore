@@ -7,8 +7,12 @@ _minted-report/
 latex-output/
 *.synctex.gz
 .DS_Store
-notebooks/results/
 
 /data/processed/
 /data/raw/
 docs/_build/
+
+/notebooks/progression.gif
+/notebooks/movie.mp4
+/notebooks/runs/
+notebooks/results/
