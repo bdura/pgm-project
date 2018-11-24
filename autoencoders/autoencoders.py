@@ -45,8 +45,6 @@ class AutoEncoder(nn.Module):
         x = self.encode(x)
         x = self.decode(x)
 
-        torch.randn
-
         return x
 
     def num_flat_features(self, x):
