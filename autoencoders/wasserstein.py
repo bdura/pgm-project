@@ -15,12 +15,6 @@ def cost(x, y):
     return F.mse_loss(x, y)
 
 
-def loss(x, x_tilde, z_tilde):
-
-    z = torch.randn_like(z_tilde)
-    pass
-
-
 class WassersteinAutoEncoder(nn.Module):
 
     def __init__(self, ksi=10., hidden_dimension=2):
@@ -41,7 +35,8 @@ class WassersteinAutoEncoder(nn.Module):
 
     def encode(self, x):
 
-        x = x.view(-1, num_flat_features(x))
+        n = x.size(0)
+        x = x.view(n, -1)
 
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
@@ -67,19 +62,20 @@ class WassersteinAutoEncoder(nn.Module):
 
         return x_tilde, z
 
-    def loss(self, x, x_tilde, z):
+    def loss(self, x, x_tilde, z, device):
 
-        n = x.size()[0]
+        n = x.size(0)
 
-        recon_loss = F.binary_cross_entropy(x_tilde, x)
+        recon_loss = F.binary_cross_entropy(x_tilde, x.view(n, -1))
 
-        z_fake = torch.randn(n, self.hidden_dimension)
+        z_fake = torch.randn(n, self.hidden_dimension).to(device)
 
         kernel_zf_zf = self.kernel(z_fake, z_fake)
         kernel_z_z = self.kernel(z, z)
         kernel_z_zf = self.kernel(z, z_fake)
 
-        mmd_loss = ((1 - torch.eye(n)) * (kernel_zf_zf + kernel_z_z)).sum() / (n * (n-1)) - 2 * kernel_z_zf.mean()
+        mmd_loss = ((1 - torch.eye(n).to(device)) * (kernel_zf_zf + kernel_z_z)).sum() \
+                   / (n * (n-1)) - 2 * kernel_z_zf.mean()
 
         total_loss = recon_loss + self.ksi * mmd_loss
 
@@ -109,6 +105,64 @@ class WassersteinAutoEncoder(nn.Module):
         return c / (c + (x_ - y_).pow(2).sum(2))
 
 
+def test(epoch, model, test_loader, device, writer):
+    model.eval()
+    test_loss = 0
+
+    # We do not compute gradients during the testing phase, hence the no_grad() environment
+    with torch.no_grad():
+
+        for i, (data, _) in enumerate(test_loader):
+
+            data = data.to(device)
+            x_tilde, z = model(data)
+
+            test_loss += model.loss(x_tilde=x_tilde, x=data, z=z, device=device).item()
+
+            if i == 0:
+                n = min(data.size(0), 8)
+                comparison = torch.cat([data[:n], x_tilde.view(100, 1, 28, 28)[:n]])
+
+                writer.add_image('reconstruction', comparison.cpu(), epoch)
+
+    test_loss /= len(test_loader.dataset)
+    print('>> Test set loss: {:.4f}'.format(test_loss))
+
+    writer.add_scalar('data/test-loss', test_loss, epoch)
+
+
+def train(epoch, model, optimizer, train_loader, device, writer):
+    model.train()
+    train_loss = 0
+
+    for batch_idx, (data, _) in enumerate(train_loader):
+        # We move the mini-batch to the device (useful is using a GPU)
+        data = data.to(device)
+
+        # We initialize the gradients
+        optimizer.zero_grad()
+
+        # We compute the recontruction of x (x_tilde) and its encoding (z)
+        x_tilde, z = model(data)
+
+        # We compute the loss
+        loss = model.loss(x_tilde=x_tilde, x=data, z=z, device=device)
+
+        # Backpropagation
+        loss.backward()
+
+        # Updating the loss
+        train_loss += loss.item()
+
+        # Updating the parameters
+        optimizer.step()
+
+    print('>> Epoch: {} Average loss: {:.4f}'.format(epoch, train_loss / len(train_loader.dataset)))
+
+    writer.add_scalar('data/train-loss', train_loss / len(train_loader.dataset), epoch)
+
+
 if __name__ == '__main__':
+
     model = WassersteinAutoEncoder()
     model.train()
