@@ -2,6 +2,21 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from torch.utils.data import Dataset
+
+
+class ProteinDataset(Dataset):
+
+    def __init__(self, data):
+
+        self.data = data
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, item):
+        return torch.Tensor(self.data[item].reshape(24, 82))
+
 
 class WassersteinAutoEncoder(nn.Module):
 
@@ -11,15 +26,15 @@ class WassersteinAutoEncoder(nn.Module):
         self.ksi = ksi
         self.hidden_dimension = hidden_dimension
 
-        self.fc1 = nn.Linear(28 * 28, 128)
-        self.fc2 = nn.Linear(128, 50)
-        self.fc3 = nn.Linear(50, 12)
-        self.fc4 = nn.Linear(12, hidden_dimension)
+        self.fc1 = nn.Linear(24 * 82, 512)
+        self.fc2 = nn.Linear(512, 128)
+        self.fc3 = nn.Linear(128, 32)
+        self.fc4 = nn.Linear(32, hidden_dimension)
 
-        self.fc5 = nn.Linear(hidden_dimension, 12)
-        self.fc6 = nn.Linear(12, 50)
-        self.fc7 = nn.Linear(50, 128)
-        self.fc8 = nn.Linear(128, 28 * 28)
+        self.fc5 = nn.Linear(hidden_dimension, 32)
+        self.fc6 = nn.Linear(32, 128)
+        self.fc7 = nn.Linear(128, 512)
+        self.fc8 = nn.Linear(512, 24 * 82)
 
     def encode(self, x):
 
@@ -35,12 +50,17 @@ class WassersteinAutoEncoder(nn.Module):
 
     def decode(self, x):
 
+        n = x.size(0)
+
         x = F.relu(self.fc5(x))
         x = F.relu(self.fc6(x))
         x = F.relu(self.fc7(x))
+        x = self.fc8(x)
+
+        x = x.view(n, 24, 82)
 
         # We push the pixels towards 0 and 1
-        x = torch.sigmoid(self.fc8(x))
+        x = F.softmax(x, dim=1)
 
         return x
 
@@ -54,7 +74,7 @@ class WassersteinAutoEncoder(nn.Module):
 
         n = x.size(0)
 
-        recon_loss = F.binary_cross_entropy(x_tilde, x.view(n, -1))
+        recon_loss = F.binary_cross_entropy(x_tilde.view(n, -1), x.view(n, -1))
 
         z_fake = torch.randn(n, self.hidden_dimension).to(device)
 
@@ -100,7 +120,7 @@ def test(epoch, model, test_loader, device, writer):
     # We do not compute gradients during the testing phase, hence the no_grad() environment
     with torch.no_grad():
 
-        for i, (data, _) in enumerate(test_loader):
+        for i, data in enumerate(test_loader):
 
             data = data.to(device)
             x_tilde, z = model(data)
@@ -109,7 +129,7 @@ def test(epoch, model, test_loader, device, writer):
 
             if i == 0:
                 n = min(data.size(0), 8)
-                comparison = torch.cat([data[:n], x_tilde.view(100, 1, 28, 28)[:n]])
+                comparison = torch.cat([data[:n].view(n, 1, 24, 82), x_tilde.view(100, 1, 24, 82)[:n]])
 
                 writer.add_image('reconstruction', comparison.cpu(), epoch)
 
@@ -123,7 +143,7 @@ def train(epoch, model, optimizer, train_loader, device, writer):
     model.train()
     train_loss = 0
 
-    for batch_idx, (data, _) in enumerate(train_loader):
+    for batch_idx, data in enumerate(train_loader):
         # We move the mini-batch to the device (useful is using a GPU)
         data = data.to(device)
 
