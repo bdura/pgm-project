@@ -12,7 +12,4 @@ latex-output/
 /data/raw/
 docs/_build/
 
-/notebooks/progression.gif
-/notebooks/movie.mp4
 /notebooks/runs/
-notebooks/results/

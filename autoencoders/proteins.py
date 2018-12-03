@@ -15,16 +15,18 @@ class ProteinDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, item):
-        return torch.Tensor(self.data[item].reshape(24, 82))
+        return torch.Tensor(self.data[item])
 
 
 class WassersteinAutoEncoder(nn.Module):
 
-    def __init__(self, ksi=10., hidden_dimension=2):
+    def __init__(self, ksi=10., hidden_dimension=2, loss_function=F.binary_cross_entropy):
         super(WassersteinAutoEncoder, self).__init__()
 
         self.ksi = ksi
         self.hidden_dimension = hidden_dimension
+
+        self.loss_function = loss_function
 
         self.fc1 = nn.Linear(24 * 82, 512)
         self.fc2 = nn.Linear(512, 128)
@@ -62,7 +64,7 @@ class WassersteinAutoEncoder(nn.Module):
         # We push the pixels towards 0 and 1
         x = F.softmax(x, dim=1)
 
-        return x
+        return x.view(n, 24 * 82)
 
     def forward(self, x):
         z = self.encode(x)
@@ -74,7 +76,7 @@ class WassersteinAutoEncoder(nn.Module):
 
         n = x.size(0)
 
-        recon_loss = F.binary_cross_entropy(x_tilde.view(n, -1), x.view(n, -1))
+        recon_loss = self.loss_function(x_tilde.view(n, -1), x.view(n, -1))
 
         z_fake = torch.randn(n, self.hidden_dimension).to(device)
 
@@ -127,16 +129,16 @@ def test(epoch, model, test_loader, device, writer):
 
             test_loss += model.loss(x_tilde=x_tilde, x=data, z=z, device=device).item()
 
-            if i == 0:
-                n = min(data.size(0), 8)
-                comparison = torch.cat([data[:n].view(n, 1, 24, 82), x_tilde.view(100, 1, 24, 82)[:n]])
-
-                writer.add_image('reconstruction', comparison.cpu(), epoch)
+            # if i == 0:
+            #     n = min(data.size(0), 8)
+            #     comparison = torch.cat([data[:n].view(n, 1, 24, 82), x_tilde.view(100, 1, 24, 82)[:n]])
+            #
+            #     writer.add_image('reconstruction', comparison.cpu(), epoch)
 
     test_loss /= len(test_loader.dataset)
-    print('>> Test set loss: {:.4f}'.format(test_loss))
+    # print('>> Test set loss: {:.4f}'.format(test_loss))
 
-    writer.add_scalar('data/test-loss', test_loss, epoch)
+    writer.add_scalar('loss/test', test_loss, epoch)
 
 
 def train(epoch, model, optimizer, train_loader, device, writer):
@@ -165,12 +167,12 @@ def train(epoch, model, optimizer, train_loader, device, writer):
         # Updating the parameters
         optimizer.step()
 
-    print('>> Epoch: {} Average loss: {:.4f}'.format(epoch, train_loss / len(train_loader.dataset)))
+    # print('>> Epoch: {} Average loss: {:.4f}'.format(epoch, train_loss / len(train_loader.dataset)))
 
-    writer.add_scalar('data/train-loss', train_loss / len(train_loader.dataset), epoch)
+    writer.add_scalar('loss/train', train_loss / len(train_loader.dataset), epoch)
 
 
 if __name__ == '__main__':
 
-    model = WassersteinAutoEncoder()
-    model.train()
+    wae = WassersteinAutoEncoder()
+    wae.train()
