@@ -8,8 +8,8 @@ latex-output/
 *.synctex.gz
 .DS_Store
 
-/data/processed/
-/data/raw/
+/data/pgm-dataset.npy
+
 docs/_build/
 
 /notebooks/runs/
