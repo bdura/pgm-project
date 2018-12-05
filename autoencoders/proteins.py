@@ -72,6 +72,24 @@ class WassersteinAutoEncoder(nn.Module):
 
         return x_tilde, z
 
+    def log_softmax(self, x):
+
+        x = self.encode(x)
+
+        n = x.size(0)
+
+        x = F.relu(self.fc5(x))
+        x = F.relu(self.fc6(x))
+        x = F.relu(self.fc7(x))
+        x = self.fc8(x)
+
+        x = x.view(n, 24, 82)
+
+        # We push the pixels towards 0 and 1
+        x = F.log_softmax(x, dim=1)
+
+        return x.view(n, 24 * 82)
+
     def loss(self, x, x_tilde, z, device):
 
         n = x.size(0)
