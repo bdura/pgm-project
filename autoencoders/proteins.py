@@ -133,6 +133,67 @@ class WassersteinAutoEncoder(nn.Module):
         return c / (c + (x_ - y_).pow(2).sum(2))
 
 
+class WAESinai(WassersteinAutoEncoder):
+
+    def __init__(self, ksi=10., hidden_dimension=2, loss_function=F.binary_cross_entropy):
+
+        super().__init__(ksi=ksi, hidden_dimension=hidden_dimension, loss_function=loss_function)
+
+        self.dropout = nn.Dropout(.5)
+
+    def encode(self, x):
+
+        n = x.size(0)
+        x = x.view(n, -1)
+
+        x = F.elu(self.fc1(x))
+        x = self.dropout(x)
+        x = F.elu(self.fc2(x))
+        x = self.dropout(x)
+        x = F.elu(self.fc3(x))
+        x = self.dropout(x)
+        x = self.fc4(x)
+
+        return x
+
+    def decode(self, x):
+
+        n = x.size(0)
+
+        x = F.elu(self.fc5(x))
+        x = self.dropout(x)
+        x = F.elu(self.fc6(x))
+        x = self.dropout(x)
+        x = F.elu(self.fc7(x))
+        x = self.dropout(x)
+        x = self.fc8(x)
+
+        x = x.view(n, 24, 82)
+
+        # We push the pixels towards 0 and 1
+        x = F.softmax(x, dim=1)
+
+        return x.view(n, 24 * 82)
+
+    def log_softmax(self, x):
+
+        x = self.encode(x)
+
+        n = x.size(0)
+
+        x = F.relu(self.fc5(x))
+        x = F.relu(self.fc6(x))
+        x = F.relu(self.fc7(x))
+        x = self.fc8(x)
+
+        x = x.view(n, 24, 82)
+
+        # We push the pixels towards 0 and 1
+        x = F.log_softmax(x, dim=1)
+
+        return x.view(n, 24 * 82)
+
+
 def test(epoch, model, test_loader, device, writer):
     model.eval()
     test_loss = 0
