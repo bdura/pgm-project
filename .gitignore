@@ -13,3 +13,5 @@ latex-output/
 docs/_build/
 
 /notebooks/runs/
+/data/test-fitness.npy
+/data/test-data.npy
