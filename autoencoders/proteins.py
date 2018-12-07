@@ -462,7 +462,7 @@ def train(epoch, model, optimizer, train_loader, device, writer):
 
 def loss_function_vae(recon_x, x, mu, logvar):
     # reconstruction
-    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784), reduction='sum')
+    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 24*82), reduction='sum')
 
     # see Appendix B from VAE paper:
     # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
