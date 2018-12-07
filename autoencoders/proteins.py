@@ -485,7 +485,7 @@ def vae_test(epoch, model, test_loader, device, writer):
 
             data = data.to(device)
 
-            recon_batch, mu, log_variance = vae(data)
+            recon_batch, mu, log_variance = model(data)
             test_loss += loss_function_vae(recon_batch, data, mu, log_variance).item()
 
             # if i == 0:
