@@ -460,9 +460,10 @@ def train(epoch, model, optimizer, train_loader, device, writer):
 
     writer.add_scalar('loss/train', train_loss / len(train_loader.dataset), epoch)
 
+
 def loss_function_vae(recon_x, x, mu, logvar):
     # reconstruction
-    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 24*82), reduction='sum')
+    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 24*82))
 
     # see Appendix B from VAE paper:
     # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
@@ -473,6 +474,7 @@ def loss_function_vae(recon_x, x, mu, logvar):
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 
     return BCE + KLD
+
 
 def vae_test(epoch, model, test_loader, device, writer):
     model.eval()
