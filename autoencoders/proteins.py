@@ -363,9 +363,10 @@ class VAESinai(nn.Module):
 
         n = x.size(0)
 
-        x = F.relu(self.fc5(x))
-        x = F.relu(self.fc6(x))
-        x = F.relu(self.fc7(x))
+        x = F.elu(self.fc5(x))
+        x = F.elu(self.fc6(x))
+        x = self.dropout(x)
+        x = F.elu(self.fc7(x))
         x = self.fc8(x)
 
         x = x.view(n, 24, 82)
@@ -382,9 +383,10 @@ class VAESinai(nn.Module):
 
         n = x.size(0)
 
-        x = F.relu(self.fc5(x))
-        x = F.relu(self.fc6(x))
-        x = F.relu(self.fc7(x))
+        x = F.elu(self.fc5(x))
+        x = F.elu(self.fc6(x))
+        x = self.dropout(x)
+        x = F.elu(self.fc7(x))
         x = self.fc8(x)
 
         x = x.view(n, 24, 82)
@@ -424,14 +426,12 @@ class VAEProtein(nn.Module):
         self.fc8 = nn.Linear(512, 24 * 82)
 
     def encode(self, x):
+
         n = x.size(0)
         x = x.view(n, -1)
 
-        x = F.elu(self.fc1(x))
-        x = self.dropout(x)
-        x = F.elu(self.fc2(x))
-        x = self.bn1(x)
-        x = F.elu(self.fc3(x))
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
 
         mu, log_variance = self.fc41(x), self.fc42(x)
@@ -449,10 +449,9 @@ class VAEProtein(nn.Module):
 
         n = x.size(0)
 
-        x = F.elu(self.fc5(x))
-        x = F.elu(self.fc6(x))
-        x = self.dropout(x)
-        x = F.elu(self.fc7(x))
+        x = F.relu(self.fc5(x))
+        x = F.relu(self.fc6(x))
+        x = F.relu(self.fc7(x))
         x = self.fc8(x)
 
         x = x.view(n, 24, 82)
@@ -469,10 +468,9 @@ class VAEProtein(nn.Module):
 
         n = x.size(0)
 
-        x = F.elu(self.fc5(x))
-        x = F.elu(self.fc6(x))
-        x = self.dropout(x)
-        x = F.elu(self.fc7(x))
+        x = F.relu(self.fc5(x))
+        x = F.relu(self.fc6(x))
+        x = F.relu(self.fc7(x))
         x = self.fc8(x)
 
         x = x.view(n, 24, 82)
