@@ -460,6 +460,74 @@ def train(epoch, model, optimizer, train_loader, device, writer):
 
     writer.add_scalar('loss/train', train_loss / len(train_loader.dataset), epoch)
 
+def loss_function_vae(recon_x, x, mu, logvar):
+    # reconstruction
+    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784), reduction='sum')
+
+    # see Appendix B from VAE paper:
+    # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
+    # https://arxiv.org/abs/1312.6114
+    # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
+
+    # KL Divergence
+    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+
+    return BCE + KLD
+
+def vae_test(epoch, model, test_loader, device, writer):
+    model.eval()
+    test_loss = 0
+
+    # We do not compute gradients during the testing phase, hence the no_grad() environment
+    with torch.no_grad():
+
+        for i, data in enumerate(test_loader):
+
+            data = data.to(device)
+
+            recon_batch, mu, log_variance = vae(data)
+            test_loss += loss_function_vae(recon_batch, data, mu, log_variance).item()
+
+            # if i == 0:
+            #     n = min(data.size(0), 8)
+            #     comparison = torch.cat([data[:n].view(n, 1, 24, 82), x_tilde.view(100, 1, 24, 82)[:n]])
+            #
+            #     writer.add_image('reconstruction', comparison.cpu(), epoch)
+
+    test_loss /= len(test_loader.dataset)
+    # print('>> Test set loss: {:.4f}'.format(test_loss))
+
+    writer.add_scalar('loss/test', test_loss, epoch)
+
+
+def vae_train(epoch, model, optimizer, train_loader, device, writer):
+    model.train()
+    train_loss = 0
+
+    for batch_idx, data in enumerate(train_loader):
+        # We move the mini-batch to the device (useful is using a GPU)
+        data = data.to(device)
+
+        # We initialize the gradients
+        optimizer.zero_grad()
+
+        # We compute the recontruction of x (x_tilde) and its encoding (z)
+        recon_batch, mu, log_variance = model(data)
+        loss = loss_function_vae(recon_batch, data, mu, log_variance)
+
+        # Backpropagation
+        loss.backward()
+
+        # Updating the loss
+        train_loss += loss.item()
+
+        # Updating the parameters
+        optimizer.step()
+
+    # print('>> Epoch: {} Average loss: {:.4f}'.format(epoch, train_loss / len(train_loader.dataset)))
+
+    writer.add_scalar('loss/train', train_loss / len(train_loader.dataset), epoch)
+
 
 if __name__ == '__main__':
 
