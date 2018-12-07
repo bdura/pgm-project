@@ -316,6 +316,94 @@ class WAESinai2(nn.Module):
         return c / (c + (x_ - y_).pow(2).sum(2))
 
 
+class VAESinai(nn.Module):
+
+    def __init__(self, hidden_dimension=2):
+        super(VAESinai, self).__init__()
+
+        self.fc1 = nn.Linear(24 * 82, 250)
+        self.fc2 = nn.Linear(250, 250)
+        self.fc3 = nn.Linear(250, 250)
+
+        self.fc41 = nn.Linear(250, hidden_dimension)
+        self.fc42 = nn.Linear(250, hidden_dimension)
+
+        self.bn1 = nn.BatchNorm1d(250)
+
+        self.fc5 = nn.Linear(hidden_dimension, 250)
+        self.fc6 = nn.Linear(250, 250)
+        self.fc7 = nn.Linear(250, 250)
+        self.fc8 = nn.Linear(250, 24 * 82)
+
+        self.dropout = nn.Dropout(.7)
+
+    def encode(self, x):
+        n = x.size(0)
+        x = x.view(n, -1)
+
+        x = F.elu(self.fc1(x))
+        x = self.dropout(x)
+        x = F.elu(self.fc2(x))
+        x = self.bn1(x)
+        x = F.elu(self.fc3(x))
+        x = F.relu(self.fc3(x))
+
+        mu, log_variance = self.fc41(x), self.fc42(x)
+
+        return mu, log_variance
+
+    def sample(self, mu, log_variance):
+
+        sigma = torch.exp(.5 * log_variance)
+        epsilon = torch.randn_like(sigma)
+
+        return mu + sigma * epsilon
+
+    def decode(self, x):
+
+        n = x.size(0)
+
+        x = F.elu(self.fc5(x))
+        x = F.elu(self.fc6(x))
+        x = self.dropout(x)
+        x = F.elu(self.fc7(x))
+        x = self.fc8(x)
+
+        x = x.view(n, 24, 82)
+
+        # We push the pixels towards 0 and 1
+        x = F.softmax(x, dim=1)
+
+        return x.view(n, 24 * 82)
+
+    def log_softmax(self, x):
+
+        mu, log_variance = self.encode(x)
+        x = self.sample(mu, log_variance)
+
+        n = x.size(0)
+
+        x = F.elu(self.fc5(x))
+        x = F.elu(self.fc6(x))
+        x = self.dropout(x)
+        x = F.elu(self.fc7(x))
+        x = self.fc8(x)
+
+        x = x.view(n, 24, 82)
+
+        # We push the pixels towards 0 and 1
+        x = F.log_softmax(x, dim=1)
+
+        return x.view(n, 24 * 82)
+
+    def forward(self, x):
+        mu, log_variance = self.encode(x)
+        x = self.sample(mu, log_variance)
+        x = self.decode(x)
+
+        return x, mu, log_variance
+
+
 def test(epoch, model, test_loader, device, writer):
     model.eval()
     test_loss = 0
