@@ -216,6 +216,8 @@ class WAESinai2(nn.Module):
         self.fc7 = nn.Linear(250, 250)
         self.fc8 = nn.Linear(250, 24 * 82)
 
+        self.dropout = nn.Dropout(.7)
+
     def encode(self, x):
 
         n = x.size(0)
