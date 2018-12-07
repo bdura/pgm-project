@@ -8,11 +8,10 @@ latex-output/
 *.synctex.gz
 .DS_Store
 
-/data/processed/
-/data/raw/
+/data/pgm-dataset.npy
+
 docs/_build/
 
-/notebooks/progression.gif
-/notebooks/movie.mp4
 /notebooks/runs/
-notebooks/results/
+/data/test-fitness.npy
+/data/test-data.npy

@@ -3,18 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-def num_flat_features(x):
-    size = x.size()[1:]  # all dimensions except the batch dimension
-    num_features = 1
-    for s in size:
-        num_features *= s
-    return num_features
-
-
-def cost(x, y):
-    return F.mse_loss(x, y)
-
-
 class WassersteinAutoEncoder(nn.Module):
 
     def __init__(self, ksi=10., hidden_dimension=2):
