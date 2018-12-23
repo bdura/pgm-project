@@ -14,7 +14,7 @@ We were inspired by the work of Sinai et al., from the Marks Laboratory at Harva
 
 During this work, we wrote our own implementation of the WAE framework in Pytorch, using Maximum Mean Discrepancy (MMD) as a divergence measure between the marginal and the prior (see section 3.3 in the [report](report.pdf) for more information).
 
-The implementation can be found [here](autoencoders/wasserstein.py).
+The implementation can be found [here](autoencoders/wasserstein.py). Task-specific implementations were added the `protein.py` module in [`autoencoders/`](autoencoders/).
 
 
 ## Dataset

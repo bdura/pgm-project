@@ -22,6 +22,15 @@ class WassersteinAutoEncoder(nn.Module):
         self.fc8 = nn.Linear(128, 28 * 28)
 
     def encode(self, x):
+        """
+        Encoder in the WAE architecture.
+
+        Args:
+            x: a Torch tensor, from the original space.
+
+        Returns:
+            the encoding of x in the latent space.
+        """
 
         n = x.size(0)
         x = x.view(n, -1)
@@ -34,6 +43,15 @@ class WassersteinAutoEncoder(nn.Module):
         return x
 
     def decode(self, x):
+        """
+        Decoder in the WAE architecture
+
+        Args:
+            x: a Torch tensor, from the latent space.
+
+        Returns:
+            the reconstruction of x, from the latent space to the original space.
+        """
 
         x = F.relu(self.fc5(x))
         x = F.relu(self.fc6(x))
@@ -45,12 +63,35 @@ class WassersteinAutoEncoder(nn.Module):
         return x
 
     def forward(self, x):
+        """
+        Performs the forward pass:
+        * encoding from the original space into the latent representation ;
+        * reconstruction with loss in the original space.
+
+        Args:
+            x: a Torch tensor, from the original space.
+
+        Returns:
+            the reconstructed example.
+        """
         z = self.encode(x)
         x_tilde = self.decode(z)
 
         return x_tilde, z
 
     def loss(self, x, x_tilde, z, device):
+        """
+        WAE loss with MMD divergence.
+
+        Args:
+            x: samples from the original space.
+            x_tilde: reconstruction by the network.
+            z: latent space representation.
+            device: device instance on which to run the computations (cpu or gpu).
+
+        Returns:
+            the MMD-based loss.
+        """
 
         n = x.size(0)
 
@@ -71,7 +112,9 @@ class WassersteinAutoEncoder(nn.Module):
 
     def kernel(self, x, y):
         """
-        Returns a matrix K where :math:`K_{i, j} = k(x_i, y_j)
+        Returns a matrix K where :math:`K_{i, j} = k(x_i, y_j)`
+
+        Here we use the inverse multiquadratics kernel.
 
         Args:
             x: a PyTorch Tensor
@@ -94,6 +137,7 @@ class WassersteinAutoEncoder(nn.Module):
 
 
 def test(epoch, model, test_loader, device, writer):
+
     model.eval()
     test_loss = 0
 
@@ -120,6 +164,7 @@ def test(epoch, model, test_loader, device, writer):
 
 
 def train(epoch, model, optimizer, train_loader, device, writer):
+
     model.train()
     train_loss = 0
 
@@ -151,6 +196,7 @@ def train(epoch, model, optimizer, train_loader, device, writer):
 
 
 if __name__ == '__main__':
+    # Mainly for debugging purposes
 
-    model = WassersteinAutoEncoder()
-    model.train()
+    wae = WassersteinAutoEncoder()
+    wae.train()
